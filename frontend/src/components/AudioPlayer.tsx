@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils";
+import { IconPause, IconPlay } from "./icons";
 
 export default function AudioPlayer({ blob }: { blob: Blob }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -38,7 +39,7 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
   };
 
   return (
-    <div className="rounded-2xl bg-paper-raised border border-border p-4 shadow-shadow-sm">
+    <div className="glass-strong rounded-2xl p-4">
       {url && (
         <audio
           ref={audioRef}
@@ -53,10 +54,10 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
         <button
           type="button"
           onClick={togglePlay}
-          className="shrink-0 w-11 h-11 rounded-full bg-accent text-accent-ink flex items-center justify-center text-lg"
+          className="shrink-0 w-12 h-12 rounded-full btn-gradient flex items-center justify-center"
           aria-label={playing ? "一時停止" : "再生"}
         >
-          {playing ? "❚❚" : "▶"}
+          {playing ? <IconPause className="w-5 h-5" /> : <IconPlay className="w-5 h-5 ml-0.5" />}
         </button>
         <div className="flex-1 flex flex-col gap-1">
           <input
@@ -65,7 +66,8 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
             max={duration || 0}
             value={current}
             onChange={seek}
-            className="w-full accent-[var(--accent)]"
+            className="w-full"
+            style={{ accentColor: "var(--accent-solid)" }}
           />
           <div className="flex justify-between text-xs text-ink-dim tabular-nums">
             <span>{formatTime(current)}</span>
@@ -75,7 +77,7 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
         <button
           type="button"
           onClick={cycleRate}
-          className="shrink-0 text-xs font-medium text-ink-dim border border-border rounded-full px-2.5 py-1"
+          className="glass shrink-0 text-xs font-medium text-ink-dim rounded-full px-2.5 py-1.5"
         >
           {rate}x
         </button>

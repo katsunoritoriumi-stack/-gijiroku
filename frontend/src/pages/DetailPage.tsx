@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useState } from "react";
+import { useRef, useState, type ComponentType, type SVGProps } from "react";
 import db, { deleteRecording } from "../db";
 import PageHeader from "../components/PageHeader";
 import AudioPlayer from "../components/AudioPlayer";
@@ -10,14 +10,23 @@ import ActionItemsView from "../components/ActionItemsView";
 import ChatPanel from "../components/ChatPanel";
 import { transcribeAudio, summarizeTranscript, ApiError } from "../api";
 import { parseTranscript } from "../utils";
+import {
+  IconFileText,
+  IconSparkles,
+  IconListChecks,
+  IconMessageCircle,
+  IconTrash,
+  IconPencil,
+} from "../components/icons";
 
 type Tab = "transcript" | "summary" | "actions" | "chat";
+type Icon = ComponentType<SVGProps<SVGSVGElement>>;
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "transcript", label: "文字起こし" },
-  { key: "summary", label: "要約" },
-  { key: "actions", label: "アクション" },
-  { key: "chat", label: "チャット" },
+const TABS: { key: Tab; label: string; icon: Icon }[] = [
+  { key: "transcript", label: "文字起こし", icon: IconFileText },
+  { key: "summary", label: "要約", icon: IconSparkles },
+  { key: "actions", label: "アクション", icon: IconListChecks },
+  { key: "chat", label: "チャット", icon: IconMessageCircle },
 ];
 
 function errorMessageOf(err: unknown, fallback: string): string {
@@ -30,6 +39,7 @@ export default function DetailPage() {
   const recording = useLiveQuery(() => (id ? db.recordings.get(id) : undefined), [id]);
   const [tab, setTab] = useState<Tab>("transcript");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const [transcribing, setTranscribing] = useState(false);
   const [transcribeError, setTranscribeError] = useState<string | null>(null);
@@ -87,6 +97,11 @@ export default function DetailPage() {
     }
   };
 
+  const focusTitle = () => {
+    titleInputRef.current?.focus();
+    titleInputRef.current?.select();
+  };
+
   const handleDelete = async () => {
     await deleteRecording(recording.id);
     navigate("/", { replace: true });
@@ -102,14 +117,14 @@ export default function DetailPage() {
               <button
                 type="button"
                 onClick={handleDelete}
-                className="text-xs font-medium text-white bg-record rounded-full px-3 py-1.5"
+                className="text-xs font-medium text-white record-gradient rounded-full px-3 py-2 min-h-[36px]"
               >
                 削除する
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmingDelete(false)}
-                className="text-xs font-medium text-ink-dim border border-border rounded-full px-3 py-1.5"
+                className="glass text-xs font-medium text-ink-dim rounded-full px-3 py-2 min-h-[36px]"
               >
                 やめる
               </button>
@@ -118,21 +133,32 @@ export default function DetailPage() {
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-ink-dim border border-border shrink-0"
+              className="glass w-10 h-10 rounded-full flex items-center justify-center text-ink-dim shrink-0"
               aria-label="削除"
             >
-              🗑
+              <IconTrash className="w-4 h-4" />
             </button>
           )
         }
       />
 
-      <div className="px-4 -mt-1 mb-4">
+      <div className="px-4 -mt-1 mb-4 flex items-center gap-1.5">
         <input
+          ref={titleInputRef}
           defaultValue={recording.title}
           onBlur={handleTitleBlur}
-          className="w-full text-lg font-semibold text-ink bg-transparent outline-none border-b border-transparent focus:border-border pb-1"
+          className="min-w-0 flex-1 text-lg font-semibold text-ink bg-transparent outline-none border-b border-dashed border-border focus:border-solid pb-1 transition-colors"
+          style={{ borderColor: "var(--border)" }}
+          onFocus={(e) => (e.target.style.borderColor = "var(--accent-solid)")}
         />
+        <button
+          type="button"
+          onClick={focusTitle}
+          className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-ink-faint"
+          aria-label="タイトルを編集"
+        >
+          <IconPencil className="w-4 h-4" />
+        </button>
       </div>
 
       {recording.audio && (
@@ -141,28 +167,35 @@ export default function DetailPage() {
         </div>
       )}
 
-      <div className="px-4 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={
-              "px-3 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors " +
-              (tab === t.key ? "text-accent border-accent" : "text-ink-dim border-transparent")
-            }
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="px-4 mb-2">
+        <div className="glass rounded-full p-1 flex gap-1">
+          {TABS.map((t) => {
+            const TabIcon = t.icon;
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={
+                  "flex-1 flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-medium transition-all min-h-[40px] " +
+                  (active ? "btn-gradient text-white" : "text-ink-dim")
+                }
+              >
+                <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <main className="flex-1 px-4 py-5">
         {tab === "transcript" &&
           (transcribing ? (
             <div className="flex flex-col gap-3">
-              <p className="text-xs text-accent flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <p className="text-xs font-medium flex items-center gap-1.5" style={{ color: "var(--accent-solid)" }}>
+                <span className="w-1.5 h-1.5 rounded-full btn-gradient animate-pulse" />
                 文字起こし中…
               </p>
               <p className="text-sm text-ink leading-relaxed whitespace-pre-wrap">{liveText}</p>
@@ -173,7 +206,7 @@ export default function DetailPage() {
             <TranscriptView segments={recording.transcriptSegments} />
           ) : (
             <CtaState
-              emoji="📝"
+              icon={IconFileText}
               text="録音の保存が完了しました。文字起こしを開始しましょう。"
               actionLabel="文字起こしを開始"
               onAction={handleTranscribe}
@@ -189,13 +222,13 @@ export default function DetailPage() {
             <SummaryView summary={recording.summary} />
           ) : recording.transcriptText ? (
             <CtaState
-              emoji="✨"
+              icon={IconSparkles}
               text="文字起こしが完了しました。要約とアクションアイテムを作成しましょう。"
               actionLabel="要約を作成"
               onAction={handleSummarize}
             />
           ) : (
-            <EmptyTabState emoji="✨" text="文字起こしが完了すると、ここに要約とキーポイントが表示されます。" />
+            <EmptyTabState icon={IconSparkles} text="文字起こしが完了すると、ここに要約とキーポイントが表示されます。" />
           ))}
 
         {tab === "actions" &&
@@ -206,9 +239,9 @@ export default function DetailPage() {
           ) : recording.actionItems ? (
             <ActionItemsView recordingId={recording.id} items={recording.actionItems} />
           ) : recording.transcriptText ? (
-            <EmptyTabState emoji="✅" text="「要約」タブから要約を作成すると、ここにアクションアイテムが表示されます。" />
+            <EmptyTabState icon={IconListChecks} text="「要約」タブから要約を作成すると、ここにアクションアイテムが表示されます。" />
           ) : (
-            <EmptyTabState emoji="✅" text="文字起こしが完了すると、ここにアクションアイテムが表示されます。" />
+            <EmptyTabState icon={IconListChecks} text="文字起こしが完了すると、ここにアクションアイテムが表示されます。" />
           ))}
 
         {tab === "chat" &&
@@ -219,38 +252,50 @@ export default function DetailPage() {
               history={recording.chatHistory ?? []}
             />
           ) : (
-            <EmptyTabState emoji="💬" text="文字起こしが完了すると、この録音の内容について質問できるようになります。" />
+            <EmptyTabState icon={IconMessageCircle} text="文字起こしが完了すると、この録音の内容について質問できるようになります。" />
           ))}
       </main>
     </div>
   );
 }
 
-function EmptyTabState({ emoji, text }: { emoji: string; text: string }) {
+function IconBadge({ icon: Icon }: { icon: Icon }) {
+  return (
+    <div className="w-14 h-14 rounded-2xl flex items-center justify-center btn-gradient">
+      <Icon className="w-6 h-6" />
+    </div>
+  );
+}
+
+function EmptyTabState({ icon, text }: { icon: Icon; text: string }) {
   return (
     <div className="flex flex-col items-center text-center gap-3 mt-10 px-4">
-      <div className="w-14 h-14 rounded-full bg-accent-soft flex items-center justify-center text-xl">{emoji}</div>
+      <IconBadge icon={icon} />
       <p className="text-sm text-ink-dim max-w-xs">{text}</p>
     </div>
   );
 }
 
 function CtaState({
-  emoji,
+  icon,
   text,
   actionLabel,
   onAction,
 }: {
-  emoji: string;
+  icon: Icon;
   text: string;
   actionLabel: string;
   onAction: () => void;
 }) {
   return (
     <div className="flex flex-col items-center text-center gap-3 mt-10 px-4">
-      <div className="w-14 h-14 rounded-full bg-accent-soft flex items-center justify-center text-xl">{emoji}</div>
+      <IconBadge icon={icon} />
       <p className="text-sm text-ink-dim max-w-xs">{text}</p>
-      <button type="button" onClick={onAction} className="text-sm font-medium text-white bg-accent rounded-full px-5 py-2.5">
+      <button
+        type="button"
+        onClick={onAction}
+        className="text-sm font-medium text-white btn-gradient rounded-full px-5 py-2.5 min-h-[44px]"
+      >
         {actionLabel}
       </button>
     </div>
@@ -259,8 +304,8 @@ function CtaState({
 
 function LoadingState({ text }: { text: string }) {
   return (
-    <p className="text-xs text-accent flex items-center gap-1.5 justify-center mt-10">
-      <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+    <p className="text-xs font-medium flex items-center gap-1.5 justify-center mt-10" style={{ color: "var(--accent-solid)" }}>
+      <span className="w-1.5 h-1.5 rounded-full btn-gradient animate-pulse" />
       {text}
     </p>
   );
@@ -270,7 +315,11 @@ function ErrorRetry({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="flex flex-col items-center text-center gap-3 mt-10 px-4">
       <p className="text-sm text-record">{message}</p>
-      <button type="button" onClick={onRetry} className="text-sm font-medium text-white bg-accent rounded-full px-5 py-2.5">
+      <button
+        type="button"
+        onClick={onRetry}
+        className="text-sm font-medium text-white btn-gradient rounded-full px-5 py-2.5 min-h-[44px]"
+      >
         もう一度試す
       </button>
     </div>

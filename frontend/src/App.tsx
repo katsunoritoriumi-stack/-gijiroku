@@ -6,11 +6,14 @@ import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/record" element={<RecordPage />} />
-      <Route path="/recording/:id" element={<DetailPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-    </Routes>
+    <>
+      <div className="ambient-bg" />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/record" element={<RecordPage />} />
+        <Route path="/recording/:id" element={<DetailPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Routes>
+    </>
   );
 }

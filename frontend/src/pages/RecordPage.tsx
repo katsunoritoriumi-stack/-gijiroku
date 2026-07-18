@@ -4,6 +4,7 @@ import { useRecorder } from "../hooks/useRecorder";
 import PageHeader from "../components/PageHeader";
 import db from "../db";
 import { defaultTitle, formatTime, readAudioDuration } from "../utils";
+import { IconMic, IconStop, IconUpload, IconPauseCircle } from "../components/icons";
 
 export default function RecordPage() {
   const navigate = useNavigate();
@@ -67,40 +68,44 @@ export default function RecordPage() {
           <p className="text-ink-dim">保存しています…</p>
         ) : (
           <>
-            <div className="flex flex-col items-center gap-4">
-              <div className="text-3xl font-semibold text-ink tabular-nums">{formatTime(elapsedSec)}</div>
+            <div className="flex flex-col items-center gap-5">
+              <div
+                className="text-4xl font-semibold text-ink tabular-nums"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {formatTime(elapsedSec)}
+              </div>
 
-              {isActive && (
-                <div className="flex items-center gap-1 h-8">
-                  {Array.from({ length: 5 }).map((_, i) => (
+              <div className="flex items-end gap-1.5 h-9">
+                {isActive &&
+                  Array.from({ length: 5 }).map((_, i) => (
                     <span
                       key={i}
-                      className="w-1.5 rounded-full bg-accent transition-all"
+                      className="w-1.5 rounded-full btn-gradient transition-all"
                       style={{
-                        height: `${8 + Math.min(1, level * (1 + i * 0.3)) * 24}px`,
+                        height: `${8 + Math.min(1, level * (1 + i * 0.3)) * 28}px`,
                         opacity: isPaused ? 0.3 : 1,
                       }}
                     />
                   ))}
-                </div>
-              )}
+              </div>
 
               <button
                 type="button"
                 onClick={isActive ? handleStop : start}
                 disabled={state === "requesting"}
                 className={
-                  "w-24 h-24 rounded-full flex items-center justify-center text-white shadow-shadow-md transition-transform active:scale-95 " +
-                  (isActive ? "bg-record animate-pulse-record" : "bg-record")
+                  "w-28 h-28 rounded-full flex items-center justify-center text-white record-gradient glow-shadow-record transition-transform active:scale-95 " +
+                  (isActive ? "animate-pulse-record" : "")
                 }
                 aria-label={isActive ? "録音を終了" : "録音を開始"}
               >
                 {state === "requesting" ? (
                   <span className="text-sm">準備中…</span>
                 ) : isActive ? (
-                  <span className="w-6 h-6 rounded-md bg-white" />
+                  <IconStop className="w-9 h-9" />
                 ) : (
-                  <span className="w-7 h-7 rounded-full bg-white" />
+                  <IconMic className="w-10 h-10" />
                 )}
               </button>
 
@@ -109,35 +114,30 @@ export default function RecordPage() {
                   <button
                     type="button"
                     onClick={isPaused ? resume : pause}
-                    className="text-sm font-medium text-ink-dim border border-border rounded-full px-4 py-1.5"
+                    className="glass flex items-center gap-1.5 text-sm font-medium text-ink rounded-full px-4 py-2"
                   >
+                    <IconPauseCircle className="w-4 h-4" />
                     {isPaused ? "再開" : "一時停止"}
                   </button>
                 )}
               </div>
             </div>
 
-            {error && (
-              <p className="text-sm text-record text-center bg-record-soft rounded-xl px-4 py-3">{error}</p>
-            )}
+            {error && <p className="text-sm text-record text-center bg-record-soft rounded-xl px-4 py-3">{error}</p>}
 
             {!isActive && (
-              <div className="flex flex-col items-center gap-2 mt-4">
+              <div className="flex flex-col items-center gap-3 mt-2">
                 <p className="text-xs text-ink-faint">または</p>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-sm font-medium text-accent border border-accent-soft bg-accent-soft rounded-full px-5 py-2.5"
+                  className="glass flex items-center gap-2 text-sm font-medium rounded-full px-5 py-2.5"
+                  style={{ color: "var(--accent-solid)" }}
                 >
+                  <IconUpload className="w-4 h-4" />
                   音声ファイルを選ぶ
                 </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="audio/*"
-                  className="hidden"
-                  onChange={handleFile}
-                />
+                <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFile} />
                 {uploadError && <p className="text-xs text-record">{uploadError}</p>}
               </div>
             )}

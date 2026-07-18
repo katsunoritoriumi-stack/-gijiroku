@@ -1,60 +1,85 @@
 @import "tailwindcss";
 
 :root {
-  --paper: #faf9f6;
-  --paper-raised: #ffffff;
-  --ink: #1a1b23;
-  --ink-dim: #6e6e7a;
-  --ink-faint: #a8a8b3;
-  --border: rgba(26, 27, 35, 0.09);
-  --accent: #4f46e5;
+  --bg-base: #f3f1fb;
+  --bg-blob-1: #c7bfff;
+  --bg-blob-2: #ffc2e2;
+  --bg-blob-3: #bfeeff;
+  --bg-blob-opacity: 0.55;
+
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-bg-strong: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 8px 32px rgba(109, 95, 232, 0.14);
+
+  --ink: #1a1633;
+  --ink-dim: rgba(26, 22, 51, 0.64);
+  --ink-faint: rgba(26, 22, 51, 0.42);
+  --border: rgba(26, 22, 51, 0.1);
+
+  --accent-solid: #6d5fe8;
+  --accent-from: #6d5fe8;
+  --accent-to: #c2409e;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(79, 70, 229, 0.1);
-  --record: #e23d28;
-  --record-soft: rgba(226, 61, 40, 0.12);
-  --success: #1e9e6b;
-  --success-soft: rgba(30, 158, 107, 0.12);
-  --shadow-sm: 0 1px 2px rgba(26, 27, 35, 0.06);
-  --shadow-md: 0 8px 24px -8px rgba(26, 27, 35, 0.18);
+  --accent-soft: rgba(109, 95, 232, 0.12);
+
+  --record-solid: #e5484d;
+  --record-from: #e5484d;
+  --record-to: #ff7a7a;
+  --record-soft: rgba(229, 72, 77, 0.12);
+
+  --success: #16a374;
+  --success-soft: rgba(22, 163, 116, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #121317;
-    --paper-raised: #1b1d23;
-    --ink: #f0efef;
-    --ink-dim: #a3a3ad;
-    --ink-faint: #6b6b76;
-    --border: rgba(255, 255, 255, 0.09);
-    --accent: #818cf8;
-    --accent-ink: #14152a;
-    --accent-soft: rgba(129, 140, 248, 0.16);
-    --record: #ff6b57;
-    --record-soft: rgba(255, 107, 87, 0.16);
+    --bg-base: #0b0b18;
+    --bg-blob-1: #6d5fe8;
+    --bg-blob-2: #c2409e;
+    --bg-blob-3: #3fb7c9;
+    --bg-blob-opacity: 0.45;
+
+    --glass-bg: rgba(255, 255, 255, 0.07);
+    --glass-bg-strong: rgba(255, 255, 255, 0.11);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    --ink: #f5f4ff;
+    --ink-dim: rgba(245, 244, 255, 0.68);
+    --ink-faint: rgba(245, 244, 255, 0.42);
+    --border: rgba(255, 255, 255, 0.12);
+
+    --accent-solid: #a596ff;
+    --accent-from: #8b7fff;
+    --accent-to: #ec7fe0;
+    --accent-ink: #14102b;
+    --accent-soft: rgba(165, 150, 255, 0.18);
+
+    --record-solid: #ff6b6b;
+    --record-from: #ff6b6b;
+    --record-to: #ff9f7a;
+    --record-soft: rgba(255, 107, 107, 0.18);
+
     --success: #4ade9b;
-    --success-soft: rgba(74, 222, 155, 0.16);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 8px 24px -8px rgba(0, 0, 0, 0.5);
+    --success-soft: rgba(74, 222, 155, 0.18);
   }
 }
 
 @theme inline {
   --font-sans: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
-  --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
+  --font-display: "Space Grotesk", var(--font-sans);
   --color-ink: var(--ink);
   --color-ink-dim: var(--ink-dim);
   --color-ink-faint: var(--ink-faint);
   --color-border: var(--border);
-  --color-accent: var(--accent);
+  --color-accent: var(--accent-solid);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
-  --color-record: var(--record);
+  --color-record: var(--record-solid);
   --color-record-soft: var(--record-soft);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
-  --shadow-shadow-sm: var(--shadow-sm);
-  --shadow-shadow-md: var(--shadow-md);
 }
 
 * {
@@ -69,7 +94,7 @@ body,
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg-base);
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -89,16 +114,86 @@ button {
   font-family: inherit;
 }
 
+/* ---- 背景の光る雲（グラスモーフィズムの土台） ---- */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--bg-base);
+  background-image: radial-gradient(circle at 18% 18%, var(--bg-blob-1) 0%, transparent 42%),
+    radial-gradient(circle at 88% 12%, var(--bg-blob-2) 0%, transparent 38%),
+    radial-gradient(circle at 45% 92%, var(--bg-blob-3) 0%, transparent 42%);
+  opacity: var(--bg-blob-opacity);
+  filter: blur(70px) saturate(140%);
+  transform: translateZ(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ambient-bg {
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes drift {
+  0% {
+    background-position: 0% 0%, 0% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 4% 6%, -5% 4%, 3% -5%;
+  }
+}
+
+/* ---- ガラスカード ---- */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  color: var(--accent-ink);
+}
+
+.record-gradient {
+  background: linear-gradient(135deg, var(--record-from), var(--record-to));
+}
+
+.glow-shadow {
+  box-shadow: 0 16px 40px -12px color-mix(in srgb, var(--accent-solid) 55%, transparent);
+}
+
+.glow-shadow-record {
+  box-shadow: 0 16px 40px -12px color-mix(in srgb, var(--record-solid) 55%, transparent);
+}
+
 @keyframes pulse-record {
   0%,
   100% {
     box-shadow: 0 0 0 0 var(--record-soft);
   }
   50% {
-    box-shadow: 0 0 0 12px transparent;
+    box-shadow: 0 0 0 14px transparent;
   }
 }
 
 .animate-pulse-record {
   animation: pulse-record 1.6s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-record,
+  .ambient-bg {
+    animation: none;
+  }
 }

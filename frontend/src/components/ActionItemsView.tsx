@@ -1,5 +1,6 @@
 import db from "../db";
 import type { ActionItem } from "../types";
+import { IconCheck } from "./icons";
 
 export default function ActionItemsView({ recordingId, items }: { recordingId: string; items: ActionItem[] }) {
   const toggle = async (id: string) => {
@@ -14,26 +15,33 @@ export default function ActionItemsView({ recordingId, items }: { recordingId: s
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2.5">
       {items.map((item) => (
-        <li key={item.id} className="flex items-start gap-3 rounded-xl border border-border bg-paper-raised p-3">
+        <li key={item.id}>
           <button
             type="button"
+            role="checkbox"
+            aria-checked={item.done}
             onClick={() => toggle(item.id)}
-            className={
-              "shrink-0 w-5 h-5 rounded-md border flex items-center justify-center mt-0.5 text-xs " +
-              (item.done ? "bg-success border-success text-white" : "border-border text-transparent")
-            }
-            aria-label={item.done ? "完了を取り消す" : "完了にする"}
+            className="glass w-full min-h-[44px] flex items-center gap-3 rounded-2xl p-3.5 text-left active:scale-[0.99] transition-transform"
           >
-            ✓
+            <span
+              className={
+                "shrink-0 w-6 h-6 rounded-lg border flex items-center justify-center transition-colors " +
+                (item.done ? "btn-gradient border-transparent text-white" : "border-border text-transparent")
+              }
+            >
+              <IconCheck className="w-4 h-4" />
+            </span>
+            <span className="min-w-0">
+              <p className={"text-sm text-ink " + (item.done ? "line-through text-ink-faint" : "")}>{item.task}</p>
+              {(item.assignee || item.due) && (
+                <p className="text-xs text-ink-faint mt-0.5">
+                  {[item.assignee, item.due].filter(Boolean).join(" ・ ")}
+                </p>
+              )}
+            </span>
           </button>
-          <div className="min-w-0">
-            <p className={"text-sm text-ink " + (item.done ? "line-through text-ink-faint" : "")}>{item.task}</p>
-            {(item.assignee || item.due) && (
-              <p className="text-xs text-ink-faint mt-0.5">{[item.assignee, item.due].filter(Boolean).join(" ・ ")}</p>
-            )}
-          </div>
         </li>
       ))}
     </ul>
