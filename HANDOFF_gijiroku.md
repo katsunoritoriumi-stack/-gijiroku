@@ -1,10 +1,10 @@
-# 引き継ぎ書: 議事録メーカー（会議録音・文字起こし・要約・チャットアプリ）
+# 引き継ぎ書: Gijiro（会議録音・文字起こし・要約・チャットアプリ）
 
-最終更新: 2026-07-18（初期実装〜本番デプロイまで完了）
+最終更新: 2026-07-21（アプリ名を「Gijiro」に変更、UIをグラスモーフィズムに刷新、チャット音声入力追加、音声シークバー不具合修正）
 
 ## 1. これは何か
 
-Manus / Cue のような音声メモアプリ。会議をブラウザで録音（またはファイルアップロード）→ Gemini で自動文字起こし（タイムスタンプ・話者ラベル付き）→ 要約・アクションアイテム抽出 → 録音内容への質問チャット、まで一気通貫でできる一般公開アプリ。
+Manus / Cue のような音声メモアプリ。会議をブラウザで録音（またはファイルアップロード）→ Gemini で自動文字起こし（タイムスタンプ・話者ラベル付き）→ 要約・アクションアイテム抽出 → 録音内容への質問チャット、まで一気通貫でできる一般公開アプリ。アプリ名は「**Gijiro**」（旧称: 議事録メーカー。UI表示・manifest・タイトルタグすべて2026-07-21に変更済み。リポジトリ名・GitHubリポ・Vercel/Renderのサービス名など内部識別子は旧称のまま維持）。
 
 - 本番フロントエンド: **https://frontend-three-chi-22.vercel.app**（認証なし・一般公開）
 - 本番バックエンド: **https://gijiroku-v687.onrender.com**
@@ -74,6 +74,14 @@ gijiroku/
 - **Claude Browserペインのscreenshotツールがこのセッションでたびたびタイムアウトした**。`get_page_text` + `javascript_tool`（`document.querySelector('button').click()` 等の直接DOM操作）で代替すれば検証は続行できる。特に、`computer` ツールの ref クリックが「クリックはしたが実際にはReactの状態が変わらない」ケースが複数回あった（原因不明、Vite HMR起因の可能性もある）。**確実に動かしたい時はブラウザの完全リロード（`location.reload()`）してから直接DOM操作でクリックする**のが最も信頼できた。
 - **Vite の HMR（Fast Refresh）で大きくコンポーネントを書き換えた直後は、古いクロージャが残ってボタンクリックが無反応になることがある**。挙動がおかしいと感じたら疑う前にまずフルリロードで切り分けること。
 - Vercel プロジェクト名が `frontend` になってしまった（gijiroku-frontend等にすべきだった）。実害はないが紛らわしいので、気になるならVercelダッシュボードでリネームする。
+
+## 5.5. 2026-07-21の変更（UI刷新・音声入力・シークバー修正・改称）
+
+- **デザインをグラスモーフィズムに全面刷新**。`src/index.css` を全面書き換えし、`backdrop-filter: blur()` 半透明サーフェス、固定背景の放射グラデーション「ブロブ」演出（`.ambient-bg`、`App.tsx` にルート直下で常時レンダリング）、グラデーションボタン、`color-mix()` によるグロー影を導入。絵文字アイコンは全廃し `src/components/icons.tsx` の手描きSVGアイコンセットに統一（アクセシビリティ・一貫性のため）。数字・ブランド表記には Space Grotesk フォントを採用。
+- **チャットに音声入力を追加**（`src/hooks/useSpeechInput.ts`）。ブラウザ標準の Web Speech API（`SpeechRecognition`）を使用し、サーバー側のGeminiクォータを消費しない。非対応ブラウザではマイクボタンを自動非表示。
+- **録音タイトルの編集導線を改善**。編集機能自体は元から実装済みだったが発見しづらかったため、`DetailPage.tsx` に鉛筆アイコンボタンを追加して明示化。
+- **音声プレイヤーのシークバー不具合を修正**（`src/hooks/useRecorder.ts` / `src/components/AudioPlayer.tsx` / `src/utils.ts`）。原因はChromeの既知の挙動で、`MediaRecorder` が複数チャンク（timeslice/一時停止再開あり）から生成したwebm Blobは `duration === Infinity` を返し、シークバーが機能しない。`fix-webm-duration` パッケージを録音停止時に適用してEBMLヘッダーのduration情報を補正。加えて `AudioPlayer` に `fallbackDurationSec` prop（録音時に実測した秒数）を渡し、メディア要素がInfinityを返した場合の保険とした。ブラウザでOscillatorNode+MediaRecorder(timeslice+pause/resume)による合成webmで再現・修正の両方を確認済み。
+- 上記4点はすべてビルド確認・ローカル/本番ブラウザ確認・commit・push・Vercel本番再デプロイ済み（バックエンドは無変更のためRender再デプロイ不要）。
 
 ## 6. 未解決・今後の候補
 
