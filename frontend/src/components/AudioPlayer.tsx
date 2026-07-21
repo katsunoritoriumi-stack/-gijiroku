@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils";
 import { IconPause, IconPlay } from "./icons";
 
-export default function AudioPlayer({ blob }: { blob: Blob }) {
+export default function AudioPlayer({ blob, fallbackDurationSec }: { blob: Blob; fallbackDurationSec?: number }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [url, setUrl] = useState<string>("");
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [duration, setDuration] = useState(fallbackDurationSec ?? 0);
   const [rate, setRate] = useState(1);
 
   useEffect(() => {
@@ -30,6 +30,17 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
     const el = audioRef.current;
     if (!el) return;
     el.currentTime = Number(e.target.value);
+    setCurrent(Number(e.target.value));
+  };
+
+  const handleLoadedMetadata = (el: HTMLAudioElement) => {
+    if (Number.isFinite(el.duration)) {
+      setDuration(el.duration);
+      return;
+    }
+    // 一部の録音由来のファイルはduration=Infinityになることがある（既知のブラウザ挙動）。
+    // フォールバック値（録音時に計測した秒数）があればそれを使い続ける。
+    if (fallbackDurationSec) setDuration(fallbackDurationSec);
   };
 
   const cycleRate = () => {
@@ -47,7 +58,8 @@ export default function AudioPlayer({ blob }: { blob: Blob }) {
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
           onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
-          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onLoadedMetadata={(e) => handleLoadedMetadata(e.currentTarget)}
+          onDurationChange={(e) => handleLoadedMetadata(e.currentTarget)}
         />
       )}
       <div className="flex items-center gap-3">

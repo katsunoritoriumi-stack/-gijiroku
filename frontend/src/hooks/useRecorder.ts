@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import fixWebmDuration from "fix-webm-duration";
 import db from "../db";
 import { useWakeLock } from "./useWakeLock";
 
@@ -159,7 +160,7 @@ export function useRecorder() {
 
     const finalDurationSec = (performance.now() - startedAtRef.current - pausedAccumRef.current) / 1000;
 
-    const blob = await new Promise<Blob>((resolve) => {
+    let blob = await new Promise<Blob>((resolve) => {
       recorder.addEventListener(
         "stop",
         () => resolve(new Blob(chunksRef.current, { type: mimeTypeRef.current })),
@@ -167,6 +168,16 @@ export function useRecorder() {
       );
       recorder.stop();
     });
+
+    // MediaRecorderが生成するwebmはduration情報を含まないため、
+    // そのままだとシークバーが機能しない（Chrome系の既知の挙動）。ここでメタデータを補正する。
+    if (mimeTypeRef.current.includes("webm")) {
+      try {
+        blob = await fixWebmDuration(blob, finalDurationSec * 1000, { logger: false });
+      } catch (err) {
+        console.error("webmのduration補正に失敗しました", err);
+      }
+    }
 
     stopElapsedTicker();
     stopLevelSampling();

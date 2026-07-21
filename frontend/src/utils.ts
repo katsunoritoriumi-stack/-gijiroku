@@ -49,13 +49,24 @@ export function readAudioDuration(blob: Blob): Promise<number> {
     const el = new Audio();
     el.preload = "metadata";
     el.src = url;
+    const cleanup = () => URL.revokeObjectURL(url);
     el.onloadedmetadata = () => {
-      const d = Number.isFinite(el.duration) ? el.duration : 0;
-      URL.revokeObjectURL(url);
-      resolve(d);
+      if (Number.isFinite(el.duration)) {
+        cleanup();
+        resolve(el.duration);
+        return;
+      }
+      // 一部のブラウザ／録音アプリ由来のwebmはduration=Infinityになることがある。
+      // 非常に大きな時刻へ一度シークすると実際の長さが確定する既知の回避策。
+      el.currentTime = 1e101;
+      el.ontimeupdate = () => {
+        el.ontimeupdate = null;
+        cleanup();
+        resolve(Number.isFinite(el.duration) ? el.duration : 0);
+      };
     };
     el.onerror = () => {
-      URL.revokeObjectURL(url);
+      cleanup();
       resolve(0);
     };
   });

@@ -163,7 +163,7 @@ export default function DetailPage() {
 
       {recording.audio && (
         <div className="px-4 mb-4">
-          <AudioPlayer blob={recording.audio} />
+          <AudioPlayer blob={recording.audio} fallbackDurationSec={recording.durationSec} />
         </div>
       )}
 

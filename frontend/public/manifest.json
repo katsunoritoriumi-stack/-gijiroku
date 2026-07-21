@@ -1,6 +1,6 @@
 {
-  "name": "議事録メーカー",
-  "short_name": "議事録メーカー",
+  "name": "Gijiro",
+  "short_name": "Gijiro",
   "description": "会議を録音して自動で文字起こし・要約・アクションアイテム抽出。録音内容に質問もできます。",
   "start_url": "/",
   "display": "standalone",

@@ -11,7 +11,7 @@ export default function HomePage() {
     <div className="flex-1 flex flex-col">
       <header className="flex items-center justify-between px-5 pt-6 pb-4">
         <h1 className="text-xl font-semibold text-ink" style={{ fontFamily: "var(--font-display)" }}>
-          議事録メーカー
+          Gijiro
         </h1>
         <Link to="/settings" className="glass w-10 h-10 rounded-full flex items-center justify-center text-ink-dim" aria-label="設定">
           <IconSettings className="w-5 h-5" />
